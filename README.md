@@ -1,4 +1,7 @@
-# Saddle Geometry of River Poker
+# Saddle Geometry of Heads-Up River Poker
+This is an analytical study of the payoff space of heads-up river spots: its shape around the
+equilibrium and what a deviation from equilibrium costs. We will also see how equilibria are
+computed in practice.
 
 ## Contents
 
