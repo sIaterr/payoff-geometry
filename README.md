@@ -1,19 +1,14 @@
-# Naive Nash
-
-> What does the payoff space of a heads-up river poker spot look like around the Nash equilibrium,
-> and how much does it cost to be away from it?
-
-Scope: heads-up, zero-sum, river only (no cards to come), known ranges, a few bet sizes. Poker terms
-are explained in the [glossary](docs/glossary.md).
+# Saddle Geometry of River Poker
 
 ## Contents
 
 1. [The payoff space as a bilinear form](#the-payoff-space-as-a-bilinear-form)
 2. [How sensitive is a Nash equilibrium?](#how-sensitive-is-a-nash-equilibrium)
-3. [Finding equilibria: CFR and the corner method](#finding-equilibria-cfr-and-the-corner-method)
+3. [Finding equilibria: CFR and the "corner method"](#finding-equilibria-cfr-and-the-corner-method)
 4. [Case study: the clairvoyant game](#case-study-the-clairvoyant-game)
 5. [Where the structure breaks](#where-the-structure-breaks)
 6. [Repository guide](#repository-guide)
+7. [References](#references)
 
 ## The payoff space as a bilinear form
 
@@ -37,7 +32,7 @@ a weighted average of **corner payoffs**. Three consequences:
 - At an equilibrium every pure strategy a player actually uses earns the same against the opponent's
   equilibrium strategy (the **indifference principle**). That is what pins down the mix.
 - For square invertible $M$ with nonnegative result, the equilibrium has a closed form
-  (Shapley and Snow, 1950, classical): $\tau^\star=M^{-1}\mathbf 1/(\mathbf 1^\top M^{-1}\mathbf 1)$,
+  (Shapley and Snow, 1950; classical): $\tau^\star=M^{-1}\mathbf 1/(\mathbf 1^\top M^{-1}\mathbf 1)$,
   $\sigma^\star=M^{-\top}\mathbf 1/(\mathbf 1^\top M^{-1}\mathbf 1)$, $v=1/(\mathbf 1^\top M^{-1}\mathbf 1)$.
 
 **The saddle and its curvature.** Strategies live on simplices, so only directions that keep the
@@ -60,7 +55,8 @@ Derivations: [docs/matrix_games.md](docs/matrix_games.md), Section 2.
 ## How sensitive is a Nash equilibrium?
 
 **Measure.** The **exploitability** $\varepsilon(\sigma,\tau)$ is how many chips a perfect opponent
-can win from a pair of strategies. It splits into one term per player,
+can win from a pair of strategies (the standard way to measure strategy quality in poker, see
+Johanson et al., 2011). It splits into one term per player,
 
 $$
 \varepsilon(\sigma,\tau)=\ell_A(\sigma)+\ell_B(\tau),
@@ -107,8 +103,8 @@ the **regret** of not having played it, meaning how much better it would have do
 mix. Next round, play actions in proportion to their positive regret (*regret matching*). Averaged
 over rounds, the strategies converge to an equilibrium of a two-player zero-sum game, and it is the
 **average** strategy that converges, not the last one. The exploitability of the average is known to
-shrink like $1/\sqrt T$ after $T$ rounds (Zinkevich et al., 2007; cited from memory), and the variant
-CFR+ is usually faster in practice.
+shrink like $1/\sqrt T$ after $T$ rounds (Zinkevich et al., 2007), and the variant CFR+ (Tammelin, 2014)
+is usually faster in practice.
 
 ```mermaid
 flowchart LR
@@ -146,7 +142,7 @@ This is exact and non-iterative, but it has three weaknesses:
 
 This is why CFR is the better tool on large spots: it works on the game tree, so memory and time per
 round grow linearly with the tree. The exact polynomial alternative is the linear program on the
-**sequence form** (von Stengel, 1996; cited from memory), which is the corner method with the size
+**sequence form** (von Stengel, 1996; Koller, Megiddo and von Stengel, 1996), which is the corner method with the size
 problem removed. In this project the corner method is used for what it is good at: building $M$ for
 small and discretized spots to study the geometry, and verifying answers.
 
@@ -217,7 +213,7 @@ Derivations: [docs/clairvoyant_game.md](docs/clairvoyant_game.md), Section 6. Co
 
 - **Only the river.** With cards still to come, a pair of pure strategies no longer has a payoff that
   can be looked up, and the strategy space is far larger. A bilinear form still exists for any such
-  game through the sequence form (von Stengel; from memory), but $M$ and $D$ lose their simple
+  game through the sequence form (von Stengel, 1996), but $M$ and $D$ lose their simple
   structure.
 - **Independent randomization.** Bilinearity needs the players' mixes to be independent. Correlated
   play breaks it.
@@ -243,3 +239,51 @@ Derivations: [docs/clairvoyant_game.md](docs/clairvoyant_game.md), Section 6. Co
 | `docs/glossary.md` | Poker terms for readers without a poker background |
 | `notebooks/` | Code: payoff matrices, verification, figures (one notebook per case study) |
 | `figures/` | Images used in the documents |
+
+## References
+
+Most equations here have no single origin. The bilinear form and the exact local form are elementary
+consequences of bilinearity, derived in this repository without a specific source. The works below
+are where the surrounding ideas come from. † marks entries whose bibliographic details are given
+from memory and have not been checked against the source.
+
+**Game theory**
+
+- J. von Neumann, "Zur Theorie der Gesellschaftsspiele", *Mathematische Annalen* 100 (1928),
+  295-320 †. The minimax theorem.
+- L. S. Shapley and R. N. Snow, "Basic solutions of discrete games", in H. W. Kuhn and A. W. Tucker
+  (eds.), *Contributions to the Theory of Games, Vol. I*, Annals of Mathematics Studies 24,
+  Princeton University Press, 1950 †. The structure of optimal strategies and the closed form on
+  square submatrices.
+
+**Poker**
+
+- B. Chen and J. Ankenman, *The Mathematics of Poker*, ConJelCo, 2006 †. Toy models such as the
+  clairvoyant game, and threshold strategies.
+- M. Johanson, K. Waugh, M. Bowling and M. Zinkevich,
+  ["Accelerating Best Response Calculation in Large Extensive Games"](https://ijcai.org/Abstract/11/054),
+  IJCAI 2011. Best responses and exploitability as the measure of strategy quality.
+- M. Bowling, N. Burch, M. Johanson and O. Tammelin, "Heads-up limit hold'em poker is solved",
+  *Science* 347 (2015), 145-149 †.
+
+**Computing equilibria**
+
+- M. Zinkevich, M. Johanson, M. Bowling and C. Piccione,
+  ["Regret Minimization in Games with Incomplete Information"](https://proceedings.neurips.cc/paper/2007/hash/08d98638c6fcd194a4b1e6992063e944-Abstract.html),
+  *Advances in Neural Information Processing Systems 20* (NIPS 2007). Counterfactual regret
+  minimization (CFR).
+- T. W. Neller and M. Lanctot,
+  ["An Introduction to Counterfactual Regret Minimization"](https://cupola.gettysburg.edu/csfac/19),
+  EAAI-13, 2013. A gentle introduction to CFR.
+- O. Tammelin, ["Solving Large Imperfect Information Games Using CFR+"](https://arxiv.org/abs/1407.5042),
+  arXiv:1407.5042, 2014.
+- B. von Stengel, "Efficient computation of behavior strategies", *Games and Economic Behavior*
+  14(2) (1996), 220-246. The sequence form.
+- D. Koller, N. Megiddo and B. von Stengel, "Efficient computation of equilibria for extensive
+  two-person games", *Games and Economic Behavior* 14(2) (1996), 247-259.
+
+**Error bounds**
+
+- A. J. Hoffman, ["On approximate solutions of systems of linear inequalities"](https://nvlpubs.nist.gov/nistpubs/jres/049/4/V49.N04.A05.pdf),
+  *Journal of Research of the National Bureau of Standards* 49(4) (1952), 263-265. The kind of bound
+  intended for relating distance to equilibrium with exploitability (planned; not used yet).
